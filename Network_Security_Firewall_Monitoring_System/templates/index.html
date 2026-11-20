@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NetGuard | Firewall Monitoring</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="shield">◆</span><div><strong>NETGUARD</strong><small>NETWORK SECURITY MONITOR</small></div></div>
+  <div class="status"><span class="dot"></span> SYSTEM ONLINE <span class="demo">DEMO MODE</span></div>
+</header>
+<main class="container">
+  <section class="hero">
+    <div><p class="eyebrow">SECURITY OPERATIONS CENTER</p><h1>Network Traffic Dashboard</h1><p class="sub">Monitor, filter, and investigate network traffic in real time.</p></div>
+    <form action="/simulate" method="post"><button class="primary">▶ Simulate Sample Traffic</button></form>
+  </section>
+  <section class="stats">
+    <div class="stat"><span class="stat-icon blue">↔</span><div><label>Total Traffic</label><strong id="total">{{stats.total}}</strong></div></div>
+    <div class="stat"><span class="stat-icon green">✓</span><div><label>Allowed</label><strong id="allowed">{{stats.allowed}}</strong></div></div>
+    <div class="stat"><span class="stat-icon red">⊘</span><div><label>Blocked</label><strong id="blocked">{{stats.blocked}}</strong></div></div>
+    <div class="stat"><span class="stat-icon orange">⚠</span><div><label>Suspicious</label><strong id="suspicious">{{stats.suspicious}}</strong></div></div>
+  </section>
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-head"><div><h2>Traffic Simulator</h2><p>Submit a network request to test firewall rules</p></div><span class="pill">TEST TOOL</span></div>
+      <form id="trafficForm" class="form-grid">
+        <label>Source IP<input name="source" value="192.168.1.10" required></label>
+        <label>Destination IP<input name="destination" value="192.168.1.1" required></label>
+        <label>Port<input name="port" type="number" min="1" max="65535" value="80" required></label>
+        <label>Protocol<select name="protocol"><option>TCP</option><option>UDP</option></select></label>
+        <button class="primary full" type="submit">Analyze Traffic</button>
+      </form><div id="result" class="result hidden"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><div><h2>Security Alerts</h2><p>Suspicious activity detected by the rule engine</p></div><span class="pill alert-pill">{{alerts|length}} ALERTS</span></div>
+      <div class="alert-list" id="alertList">
+      {% for a in alerts %}
+        <div class="alert"><span class="warning">⚠</span><div><strong>{{a.source}} → port {{a.port}}</strong><small>{{a.time}} · {{a.protocol}} · {{a.action}}</small><p>{{a.reason}}</p></div></div>
+      {% else %}<div class="empty">No suspicious activity yet. Simulate traffic to test detection.</div>{% endfor %}
+      </div>
+    </section>
+  </div>
+  <section class="panel">
+    <div class="panel-head"><div><h2>Firewall Rules</h2><p>Access control policy table</p></div><span class="pill">{{rules|length}} RULES</span></div>
+    <form action="/rules/add" method="post" class="rule-form">
+      <input name="source" placeholder="Source IP or ANY" value="ANY" required>
+      <input name="port" placeholder="Port" type="number" min="1" max="65535" required>
+      <select name="protocol"><option>TCP</option><option>UDP</option></select>
+      <select name="action"><option>ALLOW</option><option>BLOCK</option></select>
+      <input name="description" placeholder="Description">
+      <button class="secondary">+ Add Rule</button>
+    </form>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Source IP</th><th>Port</th><th>Protocol</th><th>Action</th><th>Description</th><th></th></tr></thead><tbody id="rulesBody">
+    {% for r in rules %}<tr><td>{{r.id}}</td><td class="mono">{{r.source}}</td><td>{{r.port}}</td><td>{{r.protocol}}</td><td><span class="badge {{r.action|lower}}">{{r.action}}</span></td><td>{{r.description}}</td><td><form action="/rules/delete/{{r.id}}" method="post"><button class="delete">×</button></form></td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><div><h2>Security Event Log</h2><p>Latest network traffic decisions</p></div><form action="/logs/clear" method="post"><button class="secondary">Clear Logs</button></form></div>
+    <div class="table-wrap"><table><thead><tr><th>Timestamp</th><th>Source</th><th>Destination</th><th>Port</th><th>Protocol</th><th>Status</th><th>Details</th></tr></thead><tbody id="logsBody">
+    {% for l in logs %}<tr><td>{{l.time}}</td><td class="mono">{{l.source}}</td><td class="mono">{{l.destination}}</td><td>{{l.port}}</td><td>{{l.protocol}}</td><td><span class="badge {{l.action|lower}}">{{l.action}}</span></td><td>{{l.reason}}</td></tr>{% else %}<tr><td colspan="7" class="empty">No traffic recorded. Use the simulator above.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+  <footer>NETGUARD • Educational firewall simulation • No live packet capture</footer>
+</main>
+<script src="/static/app.js"></script>
+</body></html>
